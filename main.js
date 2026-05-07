@@ -62,6 +62,7 @@ const btnToggle = document.getElementById("btnToggle");
 const dialOn = document.getElementById("dialOn");
 const dialOff = document.getElementById("dialOff");
 const dialReps = document.getElementById("dialReps");
+const backgroundFlash = document.getElementById("backgroundFlash");
 const stepButtons = [
   {button: document.getElementById("onDown"), input: onInput, delta: -1},
   {button: document.getElementById("onUp"), input: onInput, delta: 1},
@@ -117,6 +118,13 @@ function syncToggleButton() {
 
 function setDialProgress(el, progress) {
   el.style.setProperty("--progress", progress);
+}
+
+function flashBackground(color) {
+  backgroundFlash.style.setProperty("--flash-color", color);
+  backgroundFlash.classList.remove("flash");
+  void backgroundFlash.offsetWidth;
+  backgroundFlash.classList.add("flash");
 }
 
 function updateDialVisuals() {
@@ -180,6 +188,7 @@ function onDeadline() {
   if (phase === "on") {
     if (count >= repsTarget) {
       // Final rep completed: triple stop beep, then stop.
+      flashBackground("var(--dial-reps)");
       tripleStopBeep();
       stop();
       return;
@@ -202,6 +211,7 @@ function scheduleNext() {
 
 function doStartPhase() {
   setPhase("on");
+  flashBackground("var(--dial-on)");
   count++;
   scheduleNext();
   updateDialVisuals();
@@ -209,6 +219,7 @@ function doStartPhase() {
 
 function doStopPhase() {
   setPhase("off");
+  flashBackground("var(--dial-off)");
   Audio.presetBeep(2);
   scheduleNext();
   updateDialVisuals();

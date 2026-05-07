@@ -38,7 +38,38 @@ body {
   overflow-x: hidden;
 }
 
+.background-flash {
+  --flash-color: var(--dial-on);
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--flash-color);
+  opacity: 0;
+}
+
+.background-flash.flash {
+  animation: flash-background 600ms linear;
+}
+
+@keyframes flash-background {
+  0% {
+    opacity: 0;
+  }
+
+  33.333%,
+  66.667% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
 .app {
+  position: relative;
+  z-index: 1;
   width: min(100%, 452px);
   height: clamp(650px, var(--viewport-height), 800px);
   margin-block: auto;
