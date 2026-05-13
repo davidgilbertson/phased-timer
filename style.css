@@ -6,8 +6,8 @@
   --text: #eef2ff;
   --muted: #94a3c7;
   --track-faded: rgba(122, 147, 209, 0.12);
-  --dial-on: hsl(161 94% 34% / 1);
-  --dial-off: hsl(13 66% 58% / 1);
+  --dial-hold: hsl(161 94% 34% / 1);
+  --dial-rest: hsl(13 66% 58% / 1);
   --dial-reps: hsl(213 94% 63% / 1);
 }
 
@@ -39,7 +39,7 @@ body {
 }
 
 .background-flash {
-  --flash-color: var(--dial-on);
+  --flash-color: var(--dial-hold);
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -73,27 +73,28 @@ body {
   width: min(100%, 452px);
   height: clamp(650px, var(--viewport-height), 800px);
   margin-block: auto;
-  padding: 16px;
+  padding: 0;
   display: grid;
   grid-template-areas:
     "."
     "title"
     "."
-    "on"
+    "hold"
     "."
-    "off"
+    "rest"
     "."
     "reps"
     "."
     "button"
-    ".";
+    "."
+    "saved";
   grid-template-rows:
     1fr max-content
     2fr max-content
     1fr max-content
     1fr max-content
     2fr max-content
-    1fr;
+    1fr max-content;
   justify-items: center;
 }
 
@@ -114,11 +115,11 @@ h1 {
 }
 
 .dial-control:nth-of-type(1) {
-  grid-area: on;
+  grid-area: hold;
 }
 
 .dial-control:nth-of-type(2) {
-  grid-area: off;
+  grid-area: rest;
 }
 
 .dial-control:nth-of-type(3) {
@@ -126,7 +127,7 @@ h1 {
 }
 
 .dial {
-  --dial-color: var(--dial-on);
+  --dial-color: var(--dial-hold);
   --dial-faded-color: rgba(52, 211, 153, 0.28);
   --dial-current-color: var(--dial-color);
   --progress: 1;
@@ -140,13 +141,13 @@ h1 {
   transform: scaleX(-1);
 }
 
-#dialOn {
-  --dial-color: var(--dial-on);
+#dialHold {
+  --dial-color: var(--dial-hold);
   --dial-faded-color: rgba(52, 211, 153, 0.28);
 }
 
-#dialOff {
-  --dial-color: var(--dial-off);
+#dialRest {
+  --dial-color: var(--dial-rest);
   --dial-faded-color: rgba(129, 140, 248, 0.28);
 }
 
@@ -264,12 +265,65 @@ button:not(:disabled):active {
   transform: translateY(1px) scale(0.995);
 }
 
+.saved-timers {
+  grid-area: saved;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+}
+
+.saved-timer-list {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.saved-timer-pill {
+  min-height: 0;
+  border-radius: 4px;
+  padding: 7px 8px;
+  font-size: 14px;
+  line-height: 1;
+  border: 1px solid transparent;
+  color: white;
+  background: #132C48;
+}
+
+.saved-timer-pill.selected {
+  border-color: #60718a;
+}
+
+.save-timer-button {
+  margin-left: auto;
+  align-self: center;
+  min-height: 0;
+  padding: 8px;
+  color: color-mix(in srgb, var(--muted) 88%, var(--text));
+  background: transparent;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.8;
+  letter-spacing: 0.5px;
+}
+
+.save-timer-button:not(:disabled):active {
+  transform: none;
+}
+
+body.timer-running .saved-timers {
+  opacity: 0.3;
+}
+
 .toggle-button.start {
   grid-area: button;
   width: calc(100% * 2 / 3);
   max-width: 280px;
   color: white;
-  background: var(--dial-on);
+  background: var(--dial-hold);
 }
 
 .toggle-button.stop {
@@ -277,12 +331,12 @@ button:not(:disabled):active {
   width: calc(100% * 2 / 3);
   max-width: 280px;
   color: #ffe4e6;
-  background: var(--dial-off);
+  background: var(--dial-rest);
 }
 
-body[data-phase="on"] #dialOn,
-body[data-phase="off"] #dialOff,
-body[data-phase="on"] #dialReps,
-body[data-phase="off"] #dialReps {
+body[data-phase="hold"] #dialHold,
+body[data-phase="rest"] #dialRest,
+body[data-phase="hold"] #dialReps,
+body[data-phase="rest"] #dialReps {
   --dial-current-color: var(--dial-color);
 }

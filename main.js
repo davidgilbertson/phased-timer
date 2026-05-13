@@ -55,19 +55,21 @@ const Audio = (() => {
   return {beep, debugBeep, presetBeep, cancelBeep};
 })();
 
-const onInput = document.getElementById("onSec");
-const offInput = document.getElementById("offSec");
+const holdInput = document.getElementById("holdSec");
+const restInput = document.getElementById("restSec");
 const repsInput = document.getElementById("reps");
 const btnToggle = document.getElementById("btnToggle");
-const dialOn = document.getElementById("dialOn");
-const dialOff = document.getElementById("dialOff");
+const dialHold = document.getElementById("dialHold");
+const dialRest = document.getElementById("dialRest");
 const dialReps = document.getElementById("dialReps");
 const backgroundFlash = document.getElementById("backgroundFlash");
+const savedTimerList = document.getElementById("savedTimerList");
+const btnSaveTimer = document.getElementById("btnSaveTimer");
 const stepButtons = [
-  {button: document.getElementById("onDown"), input: onInput, delta: -1},
-  {button: document.getElementById("onUp"), input: onInput, delta: 1},
-  {button: document.getElementById("offDown"), input: offInput, delta: -1},
-  {button: document.getElementById("offUp"), input: offInput, delta: 1},
+  {button: document.getElementById("holdDown"), input: holdInput, delta: -1},
+  {button: document.getElementById("holdUp"), input: holdInput, delta: 1},
+  {button: document.getElementById("restDown"), input: restInput, delta: -1},
+  {button: document.getElementById("restUp"), input: restInput, delta: 1},
   {button: document.getElementById("repsDown"), input: repsInput, delta: -1},
   {button: document.getElementById("repsUp"), input: repsInput, delta: 1},
 ];
@@ -77,43 +79,102 @@ let phase = "idle";
 let switchDeadline = null;
 let pendingTimeout = null;
 let count = 0;
-let onSeconds = 8;
-let offSeconds = 2;
-let repsTarget = 5;
+let holdSeconds = Number(holdInput.value);
+let restSeconds = Number(restInput.value);
+let repsTarget = Number(repsInput.value);
 let preStartTimers = [];
 let preStartBeeps = [];
 let animationFrame = null;
+let savedTimers = [];
 
 function sec(v) {
-  return Math.max(1, Math.floor(Number(v) || 8));
+  return Math.max(1, Math.floor(Number(v) || 1));
 }
 
 function saveDurations() {
-  onSeconds = sec(onInput.value);
-  offSeconds = sec(offInput.value);
+  holdSeconds = sec(holdInput.value);
+  restSeconds = sec(restInput.value);
   repsTarget = getReps();
-  localStorage.setItem("chime_on", onSeconds);
-  localStorage.setItem("chime_off", offSeconds);
+  saveCurrentDurations();
+  renderSavedTimers();
+}
+
+function saveCurrentDurations() {
+  localStorage.setItem("chime_hold", holdSeconds);
+  localStorage.setItem("chime_rest", restSeconds);
   localStorage.setItem("chime_reps", repsTarget);
 }
 
 function loadDurations() {
-  const on = parseInt(localStorage.getItem("chime_on"), 10);
-  const off = parseInt(localStorage.getItem("chime_off"), 10);
+  // TODO: Remove the chime_on/chime_off fallback after deployed clients have had time to migrate.
+  const hold = parseInt(localStorage.getItem("chime_hold") ?? localStorage.getItem("chime_on"), 10);
+  const rest = parseInt(localStorage.getItem("chime_rest") ?? localStorage.getItem("chime_off"), 10);
   const reps = parseInt(localStorage.getItem("chime_reps"), 10);
-  if (!isNaN(on)) onInput.value = on;
-  if (!isNaN(off)) offInput.value = off;
+  if (!isNaN(hold)) holdInput.value = hold;
+  if (!isNaN(rest)) restInput.value = rest;
   if (!isNaN(reps)) repsInput.value = Math.max(1, reps);
+  return !isNaN(hold) || !isNaN(rest) || !isNaN(reps);
 }
 
 function getReps() {
   return Math.max(1, Math.floor(Number(repsInput.value) || 5));
 }
 
+function timerKey(timer) {
+  return `${timer.hold} · ${timer.rest} · ${timer.reps}`;
+}
+
+function currentTimer() {
+  return {
+    hold: sec(holdInput.value),
+    rest: sec(restInput.value),
+    reps: getReps(),
+  };
+}
+
+function saveSavedTimers() {
+  localStorage.setItem("chime_saved_timers", JSON.stringify(savedTimers));
+}
+
+function loadSavedTimers() {
+  const savedTimersJson = localStorage.getItem("chime_saved_timers");
+  savedTimers = JSON.parse(savedTimersJson || "[]");
+  return savedTimersJson != null;
+}
+
+function matchingSavedTimerIndex() {
+  const key = timerKey(currentTimer());
+  return savedTimers.findIndex(timer => timerKey(timer) === key);
+}
+
+function renderSavedTimers() {
+  const selectedIndex = matchingSavedTimerIndex();
+  btnSaveTimer.textContent = selectedIndex === -1 ? "Save" : "Unsave";
+  savedTimerList.textContent = "";
+
+  for (let i = 0; i < savedTimers.length; i++) {
+    const timer = savedTimers[i];
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "saved-timer-pill";
+    button.textContent = timerKey(timer);
+    button.classList.toggle("selected", i === selectedIndex);
+    button.addEventListener("click", () => {
+      holdInput.value = timer.hold;
+      restInput.value = timer.rest;
+      repsInput.value = timer.reps;
+      saveDurations();
+      updateDialVisuals();
+    });
+    savedTimerList.append(button);
+  }
+}
+
 function syncToggleButton() {
   btnToggle.textContent = running ? "Stop" : "Start";
   btnToggle.classList.toggle("start", !running);
   btnToggle.classList.toggle("stop", running);
+  document.body.classList.toggle("timer-running", running);
 }
 
 function setDialProgress(el, progress) {
@@ -129,35 +190,35 @@ function flashBackground(color) {
 
 function updateDialVisuals() {
   if (!running) {
-    setDialProgress(dialOn, 1);
-    setDialProgress(dialOff, 1);
+    setDialProgress(dialHold, 1);
+    setDialProgress(dialRest, 1);
     setDialProgress(dialReps, 1);
-    onInput.value = onSeconds;
-    offInput.value = offSeconds;
+    holdInput.value = holdSeconds;
+    restInput.value = restSeconds;
     repsInput.value = repsTarget;
     return;
   }
 
   if (phase === "idle" || switchDeadline == null) {
-    setDialProgress(dialOn, 1);
-    setDialProgress(dialOff, 1);
+    setDialProgress(dialHold, 1);
+    setDialProgress(dialRest, 1);
     setDialProgress(dialReps, 1);
-    onInput.value = onSeconds;
-    offInput.value = offSeconds;
+    holdInput.value = holdSeconds;
+    restInput.value = restSeconds;
     repsInput.value = repsTarget;
     return;
   }
 
-  const onDuration = onSeconds * 1000;
-  const offDuration = offSeconds * 1000;
+  const holdDuration = holdSeconds * 1000;
+  const restDuration = restSeconds * 1000;
   const left = Math.max(0, (switchDeadline ?? performance.now()) - performance.now());
 
-  setDialProgress(dialOn, phase === "on" ? left / onDuration : 0);
-  setDialProgress(dialOff, phase === "off" ? left / offDuration : 1);
-  const completedRounds = phase === "off" ? count : Math.max(0, count - 1);
+  setDialProgress(dialHold, phase === "hold" ? left / holdDuration : 0);
+  setDialProgress(dialRest, phase === "rest" ? left / restDuration : 1);
+  const completedRounds = phase === "rest" ? count : Math.max(0, count - 1);
   setDialProgress(dialReps, Math.max(0, 1 - (completedRounds / repsTarget)));
-  onInput.value = phase === "on" ? Math.ceil(left / 1000) : onSeconds;
-  offInput.value = phase === "off" ? Math.ceil(left / 1000) : offSeconds;
+  holdInput.value = phase === "hold" ? Math.ceil(left / 1000) : holdSeconds;
+  restInput.value = phase === "rest" ? Math.ceil(left / 1000) : restSeconds;
   repsInput.value = repsTarget - completedRounds;
 }
 
@@ -183,9 +244,9 @@ function setPhase(newPhase) {
   updateDialVisuals();
 }
 
-function onDeadline() {
+function handleDeadline() {
   if (!running) return;
-  if (phase === "on") {
+  if (phase === "hold") {
     if (count >= repsTarget) {
       // Final rep completed: triple stop beep, then stop.
       flashBackground("var(--dial-reps)");
@@ -193,33 +254,33 @@ function onDeadline() {
       stop();
       return;
     } else {
-      doStopPhase();
+      startRestPhase();
     }
   } else {
     Audio.presetBeep(7);
-    doStartPhase();
+    startHoldPhase();
   }
 }
 
 function scheduleNext() {
   clearTimeout(pendingTimeout);
   const now = performance.now();
-  const durMs = (phase === "on" ? onSeconds : offSeconds) * 1000;
+  const durMs = (phase === "hold" ? holdSeconds : restSeconds) * 1000;
   switchDeadline = now + durMs;
-  pendingTimeout = setTimeout(onDeadline, durMs);
+  pendingTimeout = setTimeout(handleDeadline, durMs);
 }
 
-function doStartPhase() {
-  setPhase("on");
-  flashBackground("var(--dial-on)");
+function startHoldPhase() {
+  setPhase("hold");
+  flashBackground("var(--dial-hold)");
   count++;
   scheduleNext();
   updateDialVisuals();
 }
 
-function doStopPhase() {
-  setPhase("off");
-  flashBackground("var(--dial-off)");
+function startRestPhase() {
+  setPhase("rest");
+  flashBackground("var(--dial-rest)");
   Audio.presetBeep(2);
   scheduleNext();
   updateDialVisuals();
@@ -229,8 +290,8 @@ function start() {
   if (running) return;
   running = true;
   count = 0;
-  onSeconds = sec(onInput.value);
-  offSeconds = sec(offInput.value);
+  holdSeconds = sec(holdInput.value);
+  restSeconds = sec(restInput.value);
   repsTarget = getReps();
   syncToggleButton();
   startAnimation();
@@ -246,7 +307,7 @@ function start() {
     if (!running) return;
     preStartBeeps = [];
     clearPreStartTimers();
-    doStartPhase();
+    startHoldPhase();
   }, gap * 3 * 1000));
 }
 
@@ -266,6 +327,18 @@ btnToggle.addEventListener("click", () => {
   else start();
 });
 
+btnSaveTimer.addEventListener("click", () => {
+  if (running) return;
+  const selectedIndex = matchingSavedTimerIndex();
+  if (selectedIndex === -1) {
+    savedTimers.push(currentTimer());
+  } else {
+    savedTimers.splice(selectedIndex, 1);
+  }
+  saveSavedTimers();
+  renderSavedTimers();
+});
+
 for (const {button, input, delta} of stepButtons) {
   button.addEventListener("click", () => {
     if (running) return;
@@ -275,10 +348,10 @@ for (const {button, input, delta} of stepButtons) {
   });
 }
 
-onInput.addEventListener("input", () => {
+holdInput.addEventListener("input", () => {
   if (!running) saveDurations();
 });
-offInput.addEventListener("input", () => {
+restInput.addEventListener("input", () => {
   if (!running) saveDurations();
 });
 
@@ -290,16 +363,19 @@ document.addEventListener("visibilitychange", () => {
   if (!running || switchDeadline == null) return;
   const rem = Math.max(0, switchDeadline - performance.now());
   clearTimeout(pendingTimeout);
-  pendingTimeout = setTimeout(onDeadline, rem);
+  pendingTimeout = setTimeout(handleDeadline, rem);
 });
 
-loadDurations();
-onSeconds = sec(onInput.value);
-offSeconds = sec(offInput.value);
+const hadStoredDuration = loadDurations();
+loadSavedTimers();
+holdSeconds = sec(holdInput.value);
+restSeconds = sec(restInput.value);
 repsTarget = getReps();
+if (hadStoredDuration) saveCurrentDurations();
 setPhase("idle");
 updateDialVisuals();
 syncToggleButton();
+renderSavedTimers();
 
 function tripleStopBeep() {
   const gap = 0.8; // seconds between beeps
