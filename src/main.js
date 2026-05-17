@@ -1,3 +1,5 @@
+import {registerSW} from "virtual:pwa-register";
+
 const Audio = (() => {
   let ctx;
   const debugSounds = {
@@ -63,8 +65,11 @@ const dialHold = document.getElementById("dialHold");
 const dialRest = document.getElementById("dialRest");
 const dialReps = document.getElementById("dialReps");
 const backgroundFlash = document.getElementById("backgroundFlash");
+const updateBanner = document.getElementById("updateBanner");
 const savedTimerList = document.getElementById("savedTimerList");
 const btnSaveTimer = document.getElementById("btnSaveTimer");
+const btnShare = document.getElementById("btnShare");
+const UPDATED_BANNER_FLAG = "phased_timer_updated";
 const stepButtons = [
   {button: document.getElementById("holdDown"), input: holdInput, delta: -1},
   {button: document.getElementById("holdUp"), input: holdInput, delta: 1},
@@ -86,6 +91,16 @@ let preStartTimers = [];
 let preStartBeeps = [];
 let animationFrame = null;
 let savedTimers = [];
+
+function showUpdateBanner(text, className = "") {
+  updateBanner.textContent = text;
+  updateBanner.className = `update-banner ${className}`.trim();
+  updateBanner.hidden = false;
+}
+
+function hideUpdateBanner() {
+  updateBanner.hidden = true;
+}
 
 function sec(v) {
   return Math.max(1, Math.floor(Number(v) || 1));
@@ -136,6 +151,14 @@ function saveSavedTimers() {
   localStorage.setItem("chime_saved_timers", JSON.stringify(savedTimers));
 }
 
+function saveTimerIfMissing(timer) {
+  const key = timerKey(timer);
+  if (savedTimers.some(savedTimer => timerKey(savedTimer) === key)) return false;
+  savedTimers.push(timer);
+  saveSavedTimers();
+  return true;
+}
+
 function loadSavedTimers() {
   const savedTimersJson = localStorage.getItem("chime_saved_timers");
   savedTimers = JSON.parse(savedTimersJson || "[]");
@@ -145,6 +168,63 @@ function loadSavedTimers() {
 function matchingSavedTimerIndex() {
   const key = timerKey(currentTimer());
   return savedTimers.findIndex(timer => timerKey(timer) === key);
+}
+
+function queryTimer() {
+  const params = new URLSearchParams(window.location.search);
+  const timer = {};
+  const hold = parseInt(params.get("hold"), 10);
+  const rest = parseInt(params.get("rest"), 10);
+  const reps = parseInt(params.get("reps"), 10);
+  if (!isNaN(hold) && hold > 0) timer.hold = hold;
+  if (!isNaN(rest) && rest > 0) timer.rest = rest;
+  if (!isNaN(reps) && reps > 0) timer.reps = reps;
+  return Object.keys(timer).length === 0 ? null : timer;
+}
+
+function applyQueryTimer(hadStoredDuration) {
+  const timer = queryTimer();
+  if (!timer) return false;
+
+  const previousTimer = currentTimer();
+  if (timer.hold != null) holdInput.value = timer.hold;
+  if (timer.rest != null) restInput.value = timer.rest;
+  if (timer.reps != null) repsInput.value = timer.reps;
+
+  const nextTimer = currentTimer();
+  if (hadStoredDuration && timerKey(previousTimer) !== timerKey(nextTimer)) {
+    saveTimerIfMissing(previousTimer);
+  }
+  saveTimerIfMissing(nextTimer);
+  window.history.replaceState(null, "", window.location.pathname + window.location.hash);
+  return true;
+}
+
+function shareUrl() {
+  const url = new URL(window.location.href);
+  const timer = currentTimer();
+  url.search = "";
+  url.searchParams.set("hold", timer.hold);
+  url.searchParams.set("rest", timer.rest);
+  url.searchParams.set("reps", timer.reps);
+  return url.toString();
+}
+
+function renderShareIcon() {
+  const isApple = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
+  btnShare.innerHTML = isApple
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 15V3"/>
+          <path d="m7 8 5-5 5 5"/>
+          <path d="M7 11H5v10h14V11h-2"/>
+        </svg>`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="18" cy="5" r="3"/>
+          <circle cx="6" cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <path d="m8.6 10.6 6.8-4.2"/>
+          <path d="m8.6 13.4 6.8 4.2"/>
+        </svg>`;
 }
 
 function renderSavedTimers() {
@@ -331,12 +411,47 @@ btnSaveTimer.addEventListener("click", () => {
   if (running) return;
   const selectedIndex = matchingSavedTimerIndex();
   if (selectedIndex === -1) {
-    savedTimers.push(currentTimer());
+    saveTimerIfMissing(currentTimer());
   } else {
     savedTimers.splice(selectedIndex, 1);
+    saveSavedTimers();
   }
-  saveSavedTimers();
   renderSavedTimers();
+});
+
+btnShare.addEventListener("click", async () => {
+  if (running) return;
+  const url = shareUrl();
+  if (navigator.share) {
+    await navigator.share({
+      title: "Phased Timer",
+      url,
+    });
+  } else {
+    await navigator.clipboard.writeText(url);
+  }
+});
+
+if (localStorage.getItem(UPDATED_BANNER_FLAG) === "1") {
+  localStorage.removeItem(UPDATED_BANNER_FLAG);
+  showUpdateBanner("Updated to a new version", "downloaded");
+  setTimeout(hideUpdateBanner, 2000);
+}
+
+registerSW({
+  immediate: true,
+  onRegisteredSW(_, registration) {
+    if (!registration) return;
+    registration.addEventListener("updatefound", () => {
+      const installing = registration.installing;
+      if (!installing || !navigator.serviceWorker.controller) return;
+      showUpdateBanner("Downloading a new version");
+      installing.addEventListener("statechange", () => {
+        if (installing.state !== "installed") return;
+        localStorage.setItem(UPDATED_BANNER_FLAG, "1");
+      });
+    });
+  },
 });
 
 for (const {button, input, delta} of stepButtons) {
@@ -368,14 +483,16 @@ document.addEventListener("visibilitychange", () => {
 
 const hadStoredDuration = loadDurations();
 loadSavedTimers();
+const hadQueryTimer = applyQueryTimer(hadStoredDuration);
 holdSeconds = sec(holdInput.value);
 restSeconds = sec(restInput.value);
 repsTarget = getReps();
-if (hadStoredDuration) saveCurrentDurations();
+if (hadStoredDuration || hadQueryTimer) saveCurrentDurations();
 setPhase("idle");
 updateDialVisuals();
 syncToggleButton();
 renderSavedTimers();
+renderShareIcon();
 
 function tripleStopBeep() {
   const gap = 0.8; // seconds between beeps

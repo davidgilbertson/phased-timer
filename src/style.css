@@ -52,6 +52,25 @@ body {
   animation: flash-background 600ms linear;
 }
 
+.update-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  min-height: 0;
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: white;
+  background: var(--dial-rest);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.update-banner.downloaded {
+  background: var(--dial-hold);
+}
+
 @keyframes flash-background {
   0% {
     opacity: 0;
@@ -263,6 +282,24 @@ button:focus-visible {
 
 button:not(:disabled):active {
   transform: translateY(1px) scale(0.995);
+}
+
+.share-button {
+  margin-left: -8px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  min-height: 30px;
+  padding: 3px;
+  color: color-mix(in srgb, var(--muted) 88%, var(--text));
+  background: transparent;
+  opacity: 0.5;
+}
+
+.share-button svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
 }
 
 .saved-timers {

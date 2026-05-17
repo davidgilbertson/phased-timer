@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Phase Play Dots Padded</title>
+  <g transform="translate(8.32 8.32) scale(0.74)">
+    <path d="M4 32A28 28 0 0 1 51.45 11.86L45.89 17.61A20 20 0 0 0 12 32Z" fill="hsl(161 94% 34%)"/>
+    <path d="M52.58 13.01A28 28 0 0 1 59.99 31.19L51.99 31.42A20 20 0 0 0 46.7 18.44Z" fill="hsl(13 66% 58%)"/>
+    <path d="M59.99 32.81A28 28 0 0 1 32 60L32 52A20 20 0 0 0 51.99 32.58Z" fill="hsl(213 94% 63%)"/>
+    <path d="M26 21.8L26 42.2Q26 44 27.52 43.09L43.62 33.43Q46 32 43.62 30.57L27.52 20.91Q26 20 26 21.8Z" fill="hsl(213 94% 63%)"/>
+    <circle cx="9.34" cy="39.92" r="2.7" fill="hsl(161 94% 34%)"/>
+    <circle cx="15.03" cy="48.97" r="2.7" fill="hsl(13 66% 58%)"/>
+    <circle cx="24.08" cy="54.66" r="2.7" fill="hsl(213 94% 63%)"/>
+  </g>
+</svg>
