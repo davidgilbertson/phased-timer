@@ -91,6 +91,7 @@ let preStartTimers = [];
 let preStartBeeps = [];
 let animationFrame = null;
 let savedTimers = [];
+let backgroundFlashAnimation = null;
 
 function showUpdateBanner(text, className = "") {
   updateBanner.textContent = text;
@@ -261,11 +262,24 @@ function setDialProgress(el, progress) {
   el.style.setProperty("--progress", progress);
 }
 
-function flashBackground(color) {
+function flashBackground(color, holdMs = 200) {
   backgroundFlash.style.setProperty("--flash-color", color);
-  backgroundFlash.classList.remove("flash");
-  void backgroundFlash.offsetWidth;
-  backgroundFlash.classList.add("flash");
+  if (backgroundFlashAnimation) backgroundFlashAnimation.cancel();
+
+  const fadeMs = 200;
+  const duration = fadeMs + holdMs + fadeMs;
+  backgroundFlashAnimation = backgroundFlash.animate(
+      [
+        {opacity: 0, offset: 0},
+        {opacity: 1, offset: fadeMs / duration},
+        {opacity: 1, offset: (fadeMs + holdMs) / duration},
+        {opacity: 0, offset: 1},
+      ],
+      {duration, easing: "linear"},
+  );
+  backgroundFlashAnimation.addEventListener("finish", () => {
+    backgroundFlashAnimation = null;
+  }, {once: true});
 }
 
 function updateDialVisuals() {
@@ -329,9 +343,9 @@ function handleDeadline() {
   if (phase === "hold") {
     if (count >= repsTarget) {
       // Final rep completed: triple stop beep, then stop.
-      flashBackground("var(--dial-reps)");
-      tripleStopBeep();
+      const finalFlashHoldMs = tripleStopBeep() * 1000;
       stop();
+      flashBackground("var(--dial-reps)", finalFlashHoldMs);
       return;
     } else {
       startRestPhase();
@@ -393,6 +407,10 @@ function start() {
 
 function stop() {
   running = false;
+  if (backgroundFlashAnimation) {
+    backgroundFlashAnimation.cancel();
+    backgroundFlashAnimation = null;
+  }
   syncToggleButton();
   clearTimeout(pendingTimeout);
   pendingTimeout = null;
@@ -496,9 +514,11 @@ renderShareIcon();
 
 function tripleStopBeep() {
   const gap = 0.8; // seconds between beeps
-  Audio.presetBeep(2, 0.5);
-  Audio.presetBeep(2, 0.5, gap);
-  Audio.presetBeep(2, 0.5, gap * 2);
+  const beepSeconds = 0.5;
+  Audio.presetBeep(2, beepSeconds);
+  Audio.presetBeep(2, beepSeconds, gap);
+  Audio.presetBeep(2, beepSeconds, gap * 2);
+  return (gap * 2) + beepSeconds;
 }
 
 function clearPreStartTimers() {

@@ -48,10 +48,6 @@ body {
   opacity: 0;
 }
 
-.background-flash.flash {
-  animation: flash-background 600ms linear;
-}
-
 .update-banner {
   position: fixed;
   top: 12px;
@@ -69,21 +65,6 @@ body {
 
 .update-banner.downloaded {
   background: var(--dial-hold);
-}
-
-@keyframes flash-background {
-  0% {
-    opacity: 0;
-  }
-
-  33.333%,
-  66.667% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
 }
 
 .app {
