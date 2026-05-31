@@ -20,6 +20,20 @@ import {
 const UPDATED_BANNER_FLAG = "phased_timer_updated";
 const BANNER_MS = 3000;
 
+function getRepsProgress({timer, phase, count, left}) {
+  const holdDuration = timer.hold * 1000;
+  const restDuration = timer.rest * 1000;
+  const totalDuration = (timer.reps * holdDuration) + ((timer.reps - 1) * restDuration);
+
+  if (phase === "hold") {
+    const elapsed = ((count - 1) * (holdDuration + restDuration)) + (holdDuration - left);
+    return Math.max(0, 1 - (elapsed / totalDuration));
+  }
+
+  const elapsed = (count * holdDuration) + ((count - 1) * restDuration) + (restDuration - left);
+  return Math.max(0, 1 - (elapsed / totalDuration));
+}
+
 export function App() {
   const initialStateRef = useRef(null);
   if (!initialStateRef.current) initialStateRef.current = loadInitialState();
@@ -77,7 +91,7 @@ export function App() {
       repsValue: timer.reps - completedRounds,
       holdProgress: phase === "hold" ? left / holdDuration : 0,
       restProgress: phase === "rest" ? left / restDuration : 1,
-      repsProgress: Math.max(0, 1 - (completedRounds / timer.reps)),
+      repsProgress: getRepsProgress({timer, phase, count, left}),
     };
   }, [count, now, phase, running, switchDeadline, timer]);
 
