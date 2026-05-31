@@ -4,6 +4,10 @@ import {VitePWA} from "vite-plugin-pwa";
 const APP_DISPLAY_NAME = "Phased Timer";
 
 export default defineConfig({
+  server: {
+    host: "0.0.0.0",
+    port: 8080,
+  },
   plugins: [
     VitePWA({
       registerType: "autoUpdate",
@@ -38,7 +42,4 @@ export default defineConfig({
       },
     }),
   ],
-  server: {
-    port: 8080,
-  },
 });

@@ -309,6 +309,8 @@ button:not(:disabled):active {
   border: 1px solid transparent;
   color: white;
   background: #132C48;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .saved-timer-pill.selected {
@@ -350,6 +352,107 @@ body.timer-running .saved-timers {
   max-width: 280px;
   color: #ffe4e6;
   background: var(--dial-rest);
+}
+
+.confirm-panel {
+  width: min(calc(100% - 32px), 340px);
+  padding: 20px;
+  border: 1px solid rgba(148, 163, 199, 0.18);
+  border-radius: 8px;
+  color: var(--text);
+  background: linear-gradient(180deg, #111827 0%, #0b101f 100%);
+  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.52);
+}
+
+.confirm-panel::backdrop {
+  background: rgba(4, 6, 15, 0.76);
+}
+
+.confirm-panel h2 {
+  margin: 0 0 16px;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.confirm-panel-body {
+  color: color-mix(in srgb, var(--muted) 86%, var(--text));
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.timer-values-list {
+  display: grid;
+  gap: 6px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.timer-values-row {
+  display: grid;
+  grid-template-columns: 40px minmax(2ch, max-content) 18px minmax(2ch, max-content);
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: rgba(148, 163, 199, 0.08);
+}
+
+.timer-value-label {
+  color: color-mix(in srgb, var(--muted) 78%, var(--text));
+  font-size: 13px;
+}
+
+.timer-value {
+  color: var(--text);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.timer-value.old {
+  color: color-mix(in srgb, var(--muted) 74%, var(--text));
+}
+
+.timer-value.new {
+  color: white;
+  font-weight: 600;
+  text-align: left;
+}
+
+.timer-value-arrow {
+  color: var(--dial-hold);
+  font-size: 16px;
+  text-align: center;
+}
+
+.confirm-panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.confirm-panel-button {
+  min-height: 38px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.confirm-panel-button.primary {
+  color: white;
+  background: var(--dial-hold);
+}
+
+.confirm-panel-button.neutral {
+  color: color-mix(in srgb, var(--muted) 88%, var(--text));
+  background: rgba(148, 163, 199, 0.14);
 }
 
 body[data-phase="hold"] #dialHold,

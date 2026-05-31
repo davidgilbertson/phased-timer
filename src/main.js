@@ -70,6 +70,7 @@ const savedTimerList = document.getElementById("savedTimerList");
 const btnSaveTimer = document.getElementById("btnSaveTimer");
 const btnShare = document.getElementById("btnShare");
 const UPDATED_BANNER_FLAG = "phased_timer_updated";
+const LONG_PRESS_MS = 700;
 const stepButtons = [
   {button: document.getElementById("holdDown"), input: holdInput, delta: -1},
   {button: document.getElementById("holdUp"), input: holdInput, delta: 1},
@@ -92,6 +93,58 @@ let preStartBeeps = [];
 let animationFrame = null;
 let savedTimers = [];
 let backgroundFlashAnimation = null;
+
+function createConfirmPanel() {
+  const dialog = document.createElement("dialog");
+  dialog.className = "confirm-panel";
+
+  const titleEl = document.createElement("h2");
+  const bodyEl = document.createElement("div");
+  bodyEl.className = "confirm-panel-body";
+  const actionsEl = document.createElement("div");
+  actionsEl.className = "confirm-panel-actions";
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "confirm-panel-button neutral";
+  cancelButton.textContent = "Cancel";
+
+  const okButton = document.createElement("button");
+  okButton.type = "button";
+  okButton.className = "confirm-panel-button primary";
+  okButton.textContent = "OK";
+
+  actionsEl.append(cancelButton, okButton);
+  dialog.append(titleEl, bodyEl, actionsEl);
+  document.body.append(dialog);
+
+  let onConfirm = null;
+
+  cancelButton.addEventListener("click", () => dialog.close("cancel"));
+  okButton.addEventListener("click", () => dialog.close("confirm"));
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close("cancel");
+  });
+  dialog.addEventListener("close", () => {
+    // TODO: When moving to React, replace this shared dialog with component state so native returnValue can't go stale.
+    if (dialog.returnValue === "confirm" && onConfirm) onConfirm();
+    onConfirm = null;
+  });
+
+  return {
+    show({title, body, confirmText = "OK", cancelText = "Cancel", confirm}) {
+      titleEl.textContent = title;
+      bodyEl.replaceChildren(body);
+      okButton.textContent = confirmText;
+      cancelButton.textContent = cancelText;
+      onConfirm = confirm;
+      dialog.showModal();
+      okButton.focus();
+    },
+  };
+}
+
+const confirmPanel = createConfirmPanel();
 
 function showUpdateBanner(text, className = "") {
   updateBanner.textContent = text;
@@ -146,6 +199,41 @@ function currentTimer() {
     rest: sec(restInput.value),
     reps: getReps(),
   };
+}
+
+function timerValuesList(oldTimer, newTimer) {
+  const comparison = document.createElement("div");
+  comparison.className = "timer-values-list";
+
+  for (const {label, key} of [
+    {label: "Hold", key: "hold"},
+    {label: "Rest", key: "rest"},
+    {label: "Reps", key: "reps"},
+  ]) {
+    const row = document.createElement("div");
+    row.className = "timer-values-row";
+
+    const labelEl = document.createElement("div");
+    labelEl.className = "timer-value-label";
+    labelEl.textContent = label;
+
+    const oldValueEl = document.createElement("div");
+    oldValueEl.className = "timer-value old";
+    oldValueEl.textContent = oldTimer[key];
+
+    const arrowEl = document.createElement("div");
+    arrowEl.className = "timer-value-arrow";
+    arrowEl.textContent = "→";
+
+    const newValueEl = document.createElement("div");
+    newValueEl.className = "timer-value new";
+    newValueEl.textContent = newTimer[key];
+
+    row.append(labelEl, oldValueEl, arrowEl, newValueEl);
+    comparison.append(row);
+  }
+
+  return comparison;
 }
 
 function saveSavedTimers() {
@@ -240,7 +328,37 @@ function renderSavedTimers() {
     button.className = "saved-timer-pill";
     button.textContent = timerKey(timer);
     button.classList.toggle("selected", i === selectedIndex);
+    let longPressTimeout = null;
+    let longPressHandled = false;
+
+    const cancelLongPress = () => {
+      clearTimeout(longPressTimeout);
+      longPressTimeout = null;
+    };
+
+    button.addEventListener("pointerdown", () => {
+      if (running) return;
+      longPressHandled = false;
+      longPressTimeout = setTimeout(() => {
+        const newTimer = currentTimer();
+        if (timerKey(timer) === timerKey(newTimer)) return;
+        longPressHandled = true;
+        confirmPanel.show({
+          title: "Update saved timer?",
+          body: timerValuesList(timer, newTimer),
+          confirm() {
+            savedTimers[i] = newTimer;
+            saveSavedTimers();
+            renderSavedTimers();
+          },
+        });
+      }, LONG_PRESS_MS);
+    });
+    button.addEventListener("pointerup", cancelLongPress);
+    button.addEventListener("pointercancel", cancelLongPress);
+    button.addEventListener("pointerleave", cancelLongPress);
     button.addEventListener("click", () => {
+      if (longPressHandled) return;
       holdInput.value = timer.hold;
       restInput.value = timer.rest;
       repsInput.value = timer.reps;
