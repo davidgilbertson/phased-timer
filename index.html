@@ -8,7 +8,6 @@
   <link rel="manifest" href="/manifest.webmanifest"/>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
   <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2563eb"/>
-  <link rel="stylesheet" href="/src/style.css"/>
   <script>
     function setViewportHeight() {
       document.documentElement.style.setProperty(
@@ -22,63 +21,8 @@
   </script>
 </head>
 <body>
-<div class="background-flash" id="backgroundFlash"></div>
-<div class="update-banner" id="updateBanner" hidden></div>
-<div class="app">
-  <h1>Phased Timer</h1>
-
-  <div class="dial-control">
-    <div class="dial" id="dialHold">
-      <div class="dial-inner">
-        <label for="holdSec">Hold</label>
-        <input id="holdSec" type="number" min="1" step="1" value="15" inputmode="numeric"/>
-        <span class="field-unit">seconds</span>
-      </div>
-    </div>
-    <div class="dial-buttons">
-      <button class="step-button" id="holdDown" type="button" aria-label="Decrease hold seconds">−</button>
-      <button class="step-button" id="holdUp" type="button" aria-label="Increase hold seconds">+</button>
-    </div>
-  </div>
-
-  <div class="dial-control">
-    <div class="dial" id="dialRest">
-      <div class="dial-inner">
-        <label for="restSec">Rest</label>
-        <input id="restSec" type="number" min="1" step="1" value="5" inputmode="numeric"/>
-        <span class="field-unit">seconds</span>
-      </div>
-    </div>
-    <div class="dial-buttons">
-      <button class="step-button" id="restDown" type="button" aria-label="Decrease rest seconds">−</button>
-      <button class="step-button" id="restUp" type="button" aria-label="Increase rest seconds">+</button>
-    </div>
-  </div>
-
-  <div class="dial-control">
-    <div class="dial" id="dialReps">
-      <div class="dial-inner">
-        <label for="reps">Reps</label>
-        <input id="reps" type="number" min="1" step="1" value="5" inputmode="numeric"/>
-        <span class="field-unit">repeats</span>
-      </div>
-    </div>
-    <div class="dial-buttons">
-      <button class="step-button" id="repsDown" type="button" aria-label="Decrease reps">−</button>
-      <button class="step-button" id="repsUp" type="button" aria-label="Increase reps">+</button>
-    </div>
-  </div>
-
-  <button class="toggle-button start" id="btnToggle">Start</button>
-
-  <div class="saved-timers">
-    <div class="saved-timer-list" id="savedTimerList"></div>
-    <button class="save-timer-button" id="btnSaveTimer" type="button">Save</button>
-    <button class="share-button" id="btnShare" type="button" aria-label="Share timer" title="Share"></button>
-  </div>
-</div>
-
-<script type="module" src="/src/main.js"></script>
+<div id="root"></div>
+<script type="module" src="/src/main.jsx"></script>
 <!-- Cloudflare Web Analytics -->
 <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "68ae0d930191411e997af9ec867d5974"}'></script>
 <!-- End Cloudflare Web Analytics -->

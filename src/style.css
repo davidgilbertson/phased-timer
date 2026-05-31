@@ -38,6 +38,10 @@ body {
   overflow-x: hidden;
 }
 
+#root {
+  display: contents;
+}
+
 .background-flash {
   --flash-color: var(--dial-hold);
   position: fixed;

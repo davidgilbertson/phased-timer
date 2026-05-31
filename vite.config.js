@@ -1,4 +1,5 @@
 import {defineConfig} from "vite";
+import react from "@vitejs/plugin-react";
 import {VitePWA} from "vite-plugin-pwa";
 
 const APP_DISPLAY_NAME = "Phased Timer";
@@ -9,6 +10,7 @@ export default defineConfig({
     port: 8080,
   },
   plugins: [
+    react(),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["**/*", "!_headers", "!**/_headers"],
