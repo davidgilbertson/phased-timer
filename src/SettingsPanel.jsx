@@ -1,7 +1,7 @@
 import {useEffect, useRef} from "react";
 import {StepControl} from "./StepControl.jsx";
 
-export function SettingsPanel({open, banner, countdown, onCountdownChange, onShare, onClose}) {
+export function SettingsPanel({open, banner, countdown, onCountdownChange, onCopyUrl, onClose}) {
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -48,10 +48,10 @@ export function SettingsPanel({open, banner, countdown, onCountdownChange, onSha
 
         <section className="settings-row">
           <div>
-            <h3>Share</h3>
+            <h3>URL</h3>
             <p>Copy a link for this timer.</p>
           </div>
-          <button className="text-button" type="button" onClick={onShare}>
+          <button className="text-button" type="button" onClick={onCopyUrl}>
             Copy URL
           </button>
         </section>

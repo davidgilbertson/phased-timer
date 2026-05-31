@@ -13,7 +13,6 @@ import {
   saveCurrentDurations,
   saveSavedTimers,
   saveTimerIfMissing,
-  shareUrl,
   timerKey,
 } from "./timerUtils.js";
 
@@ -313,9 +312,14 @@ export function App() {
     }
   }
 
-  async function copyShareUrl() {
+  async function copyTimerUrl() {
     if (running) return;
-    const url = shareUrl(timer);
+    const params = new URLSearchParams({
+      hold: timer.hold,
+      rest: timer.rest,
+      reps: timer.reps,
+    });
+    const url = `${window.location.origin}${window.location.pathname.replace(/\/$/, "")}?${params}`;
     await navigator.clipboard.writeText(url);
     showBanner(
       <>
@@ -384,7 +388,7 @@ export function App() {
         banner={banner}
         countdown={countdown}
         onCountdownChange={updateCountdown}
-        onShare={copyShareUrl}
+        onCopyUrl={copyTimerUrl}
         onClose={() => setSettingsOpen(false)}
       />
       <ConfirmPanel

@@ -41,20 +41,9 @@ export function saveTimerIfMissing(savedTimers, timer) {
   return [...savedTimers, timer];
 }
 
-function queryTimer() {
-  const params = new URLSearchParams(window.location.search);
-  const timer = {};
-  const hold = parseInt(params.get("hold"), 10);
-  const rest = parseInt(params.get("rest"), 10);
-  const reps = parseInt(params.get("reps"), 10);
-  if (!isNaN(hold) && hold > 0) timer.hold = hold;
-  if (!isNaN(rest) && rest > 0) timer.rest = rest;
-  if (!isNaN(reps) && reps > 0) timer.reps = reps;
-  return Object.keys(timer).length === 0 ? null : timer;
-}
-
 export function loadInitialState() {
   // TODO: Remove the chime_on/chime_off fallback after deployed clients have had time to migrate.
+  const params = new URLSearchParams(window.location.search);
   const storedHold = parseInt(localStorage.getItem("chime_hold") ?? localStorage.getItem("chime_on"), 10);
   const storedRest = parseInt(localStorage.getItem("chime_rest") ?? localStorage.getItem("chime_off"), 10);
   const storedReps = parseInt(localStorage.getItem("chime_reps"), 10);
@@ -69,8 +58,16 @@ export function loadInitialState() {
 
   let timer = storedTimer;
   let savedTimers = JSON.parse(localStorage.getItem("chime_saved_timers") || "[]");
-  const timerFromQuery = queryTimer();
-  if (timerFromQuery) {
+  const timerFromQuery = {};
+  const queryHold = parseInt(params.get("hold"), 10);
+  const queryRest = parseInt(params.get("rest"), 10);
+  const queryReps = parseInt(params.get("reps"), 10);
+  if (!isNaN(queryHold) && queryHold > 0) timerFromQuery.hold = queryHold;
+  if (!isNaN(queryRest) && queryRest > 0) timerFromQuery.rest = queryRest;
+  if (!isNaN(queryReps) && queryReps > 0) timerFromQuery.reps = queryReps;
+  const hasTimerFromQuery = Object.keys(timerFromQuery).length > 0;
+
+  if (hasTimerFromQuery) {
     timer = normalizeTimer({...storedTimer, ...timerFromQuery});
     if (hadStoredDuration && timerKey(storedTimer) !== timerKey(timer)) {
       savedTimers = saveTimerIfMissing(savedTimers, storedTimer);
@@ -80,16 +77,7 @@ export function loadInitialState() {
     window.history.replaceState(null, "", window.location.pathname + window.location.hash);
   }
 
-  if (hadStoredDuration || timerFromQuery) saveCurrentDurations(timer);
+  if (hadStoredDuration || hasTimerFromQuery) saveCurrentDurations(timer);
 
   return {timer, savedTimers, countdown};
-}
-
-export function shareUrl(timer) {
-  const url = new URL(window.location.href);
-  url.search = "";
-  url.searchParams.set("hold", timer.hold);
-  url.searchParams.set("rest", timer.rest);
-  url.searchParams.set("reps", timer.reps);
-  return url.toString();
 }
