@@ -29,11 +29,16 @@
     &.selected {
       border-color: #60718a;
     }
+
+    &:not(:disabled):active {
+      transform: none;
+    }
   }
 
   .save-button {
     margin-left: auto;
     align-self: center;
+    width: 64px;
     min-height: 0;
     padding: 8px;
     color: color-mix(in srgb, var(--muted) 88%, var(--text));
