@@ -1,0 +1,85 @@
+.background-flash {
+  --flash-color: var(--dial-hold);
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--flash-color);
+  opacity: 0;
+}
+
+.update-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  min-height: 0;
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: white;
+  background: var(--dial-rest);
+  font-size: 14px;
+  line-height: 1;
+
+  &.downloaded {
+    background: var(--dial-hold);
+  }
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 452px);
+  height: clamp(650px, var(--viewport-height), 800px);
+  margin-block: auto;
+  padding: 0;
+  display: grid;
+  grid-template-areas:
+    "."
+    "title"
+    "."
+    "hold"
+    "."
+    "rest"
+    "."
+    "reps"
+    "."
+    "button"
+    "."
+    "saved";
+  grid-template-rows:
+    1fr max-content
+    2fr max-content
+    1fr max-content
+    1fr max-content
+    2fr max-content
+    1fr max-content;
+  justify-items: center;
+
+  h1 {
+    grid-area: title;
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 1px;
+    padding: 4px 0 0;
+    text-align: center;
+    font-weight: 400;
+  }
+
+  .toggle-button {
+    grid-area: button;
+    width: calc(100% * 2 / 3);
+    max-width: 280px;
+
+    &.start {
+      color: white;
+      background: var(--dial-hold);
+    }
+
+    &.stop {
+      color: #ffe4e6;
+      background: var(--dial-rest);
+    }
+  }
+}

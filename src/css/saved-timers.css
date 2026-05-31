@@ -1,0 +1,72 @@
+.saved-timers {
+  grid-area: saved;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+
+  .list {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .pill {
+    min-height: 0;
+    border-radius: 4px;
+    padding: 7px 8px;
+    font-size: 14px;
+    line-height: 1;
+    border: 1px solid transparent;
+    color: white;
+    background: #132C48;
+    user-select: none;
+    touch-action: manipulation;
+
+    &.selected {
+      border-color: #60718a;
+    }
+  }
+
+  .save-button {
+    margin-left: auto;
+    align-self: center;
+    min-height: 0;
+    padding: 8px;
+    color: color-mix(in srgb, var(--muted) 88%, var(--text));
+    background: transparent;
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.8;
+    letter-spacing: 0.5px;
+
+    &:not(:disabled):active {
+      transform: none;
+    }
+  }
+
+  .share-button {
+    margin-left: -8px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    min-height: 30px;
+    padding: 3px;
+    color: color-mix(in srgb, var(--muted) 88%, var(--text));
+    background: transparent;
+    opacity: 0.5;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
+  }
+}
+
+body.timer-running .saved-timers {
+  opacity: 0.3;
+}

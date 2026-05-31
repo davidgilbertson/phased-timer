@@ -1,0 +1,46 @@
+.timer-values-list {
+  display: grid;
+  gap: 6px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+
+  .row {
+    display: grid;
+    grid-template-columns: 40px minmax(2ch, max-content) 18px minmax(2ch, max-content);
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    background: rgba(148, 163, 199, 0.08);
+  }
+
+  .label {
+    color: color-mix(in srgb, var(--muted) 78%, var(--text));
+    font-size: 13px;
+  }
+
+  .value {
+    color: var(--text);
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+
+    &.old {
+      color: color-mix(in srgb, var(--muted) 74%, var(--text));
+    }
+
+    &.new {
+      color: white;
+      font-weight: 600;
+      text-align: left;
+    }
+  }
+
+  .arrow {
+    color: var(--dial-hold);
+    font-size: 16px;
+    text-align: center;
+  }
+}

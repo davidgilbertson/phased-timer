@@ -1,0 +1,70 @@
+:root {
+  color-scheme: dark;
+  --viewport-height: 100dvh;
+  --bg: #060816;
+  --bg-glow: #0f1a33;
+  --text: #eef2ff;
+  --muted: #94a3c7;
+  --track-faded: rgba(122, 147, 209, 0.12);
+  --dial-hold: hsl(161 94% 34% / 1);
+  --dial-rest: hsl(13 66% 58% / 1);
+  --dial-reps: hsl(213 94% 63% / 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+html {
+  background-color: #04060f;
+}
+
+body {
+  font-family: "Segoe UI", "SF Pro Display", system-ui, sans-serif;
+  min-height: var(--viewport-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-image: radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 34%),
+  linear-gradient(180deg, var(--bg-glow) 0%, var(--bg) 58%, rgba(4, 6, 15, 0) 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 560px, 100% 560px;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+#root {
+  display: contents;
+}
+
+button {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px;
+  font: inherit;
+  font-size: 22px;
+  cursor: pointer;
+  transition: transform 160ms ease,
+  opacity 160ms ease,
+  background 160ms ease,
+  box-shadow 160ms ease;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  &:not(:disabled):active {
+    transform: translateY(1px) scale(0.995);
+  }
+}

@@ -1,0 +1,54 @@
+.confirm-panel {
+  width: min(calc(100% - 32px), 340px);
+  padding: 20px;
+  border: 1px solid rgba(148, 163, 199, 0.18);
+  border-radius: 8px;
+  color: var(--text);
+  background: linear-gradient(180deg, #111827 0%, #0b101f 100%);
+  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.52);
+
+  &::backdrop {
+    background: rgba(4, 6, 15, 0.76);
+  }
+
+  h2 {
+    margin: 0 0 16px;
+    font-size: 19px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-align: center;
+  }
+
+  .body {
+    color: color-mix(in srgb, var(--muted) 86%, var(--text));
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .primary,
+  .neutral {
+    min-height: 38px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .primary {
+    color: white;
+    background: var(--dial-hold);
+  }
+
+  .neutral {
+    color: color-mix(in srgb, var(--muted) 88%, var(--text));
+    background: rgba(148, 163, 199, 0.14);
+  }
+}

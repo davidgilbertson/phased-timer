@@ -1,0 +1,136 @@
+.dial-control {
+  display: grid;
+  justify-items: center;
+  gap: 0;
+
+  &:nth-of-type(1) {
+    grid-area: hold;
+  }
+
+  &:nth-of-type(2) {
+    grid-area: rest;
+  }
+
+  &:nth-of-type(3) {
+    grid-area: reps;
+  }
+
+  .dial {
+    --dial-color: var(--dial-hold);
+    --dial-faded-color: rgba(52, 211, 153, 0.28);
+    --dial-current-color: var(--dial-color);
+    --progress: 1;
+    position: relative;
+    width: 112px;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: conic-gradient(var(--dial-current-color) calc(var(--progress) * 1turn), var(--track-faded) 0turn);
+    transform: scaleX(-1);
+
+    &::before {
+      content: "";
+      width: calc(100% - 12px);
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: rgb(11, 16, 31);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .inner {
+      position: absolute;
+      display: grid;
+      justify-items: center;
+      gap: 3px;
+      transform: scaleX(-1);
+
+      label,
+      .field-unit {
+        color: var(--dial-color);
+      }
+
+      label {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      input {
+        width: 3ch;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--text);
+        outline: none;
+        font-size: 31px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.05em;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        &[type=number] {
+          -moz-appearance: textfield;
+        }
+      }
+
+      .field-unit {
+        font-size: 12px;
+        margin-top: -3px;
+        color: color-mix(in srgb, var(--muted) 88%, var(--text));
+        opacity: 0.6;
+      }
+    }
+  }
+
+  #dialHold {
+    --dial-color: var(--dial-hold);
+    --dial-faded-color: rgba(52, 211, 153, 0.28);
+  }
+
+  #dialRest {
+    --dial-color: var(--dial-rest);
+    --dial-faded-color: rgba(129, 140, 248, 0.28);
+  }
+
+  #dialReps {
+    --dial-color: var(--dial-reps);
+    --dial-faded-color: rgba(96, 165, 250, 0.28);
+  }
+
+  .buttons {
+    width: 102px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: -7px;
+  }
+
+  .step-button {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #c7d2fe;
+    font-size: 28px;
+    line-height: 1;
+    opacity: 0.7;
+  }
+}
+
+body[data-phase="hold"] #dialHold,
+body[data-phase="rest"] #dialRest,
+body[data-phase="hold"] #dialReps,
+body[data-phase="rest"] #dialReps {
+  --dial-current-color: var(--dial-color);
+}
