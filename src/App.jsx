@@ -4,9 +4,12 @@ import {Audio, tripleStopBeep} from "./audio.js";
 import {ConfirmPanel} from "./ConfirmPanel.jsx";
 import {DialControl} from "./DialControl.jsx";
 import {SavedTimers} from "./SavedTimers.jsx";
+import {SettingsPanel} from "./SettingsPanel.jsx";
 import {
+  countdownSec,
   loadInitialState,
   normalizeTimer,
+  saveCountdown,
   saveCurrentDurations,
   saveSavedTimers,
   saveTimerIfMissing,
@@ -15,12 +18,14 @@ import {
 } from "./timerUtils.js";
 
 const UPDATED_BANNER_FLAG = "phased_timer_updated";
+const BANNER_MS = 3000;
 
 export function App() {
   const initialStateRef = useRef(null);
   if (!initialStateRef.current) initialStateRef.current = loadInitialState();
 
   const [timer, setTimer] = useState(initialStateRef.current.timer);
+  const [countdown, setCountdown] = useState(initialStateRef.current.countdown);
   const [savedTimers, setSavedTimers] = useState(initialStateRef.current.savedTimers);
   const [running, setRunning] = useState(false);
   const [phase, setPhase] = useState("idle");
@@ -29,6 +34,7 @@ export function App() {
   const [now, setNow] = useState(performance.now());
   const [banner, setBanner] = useState(null);
   const [confirmPanel, setConfirmPanel] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const backgroundFlashRef = useRef(null);
   const backgroundFlashAnimationRef = useRef(null);
@@ -40,6 +46,8 @@ export function App() {
   const phaseRef = useRef(phase);
   const countRef = useRef(count);
   const timerRef = useRef(timer);
+  const countdownRef = useRef(countdown);
+  const bannerTimeoutRef = useRef(null);
 
   const selectedSavedTimerIndex = useMemo(() => {
     const key = timerKey(timer);
@@ -91,14 +99,18 @@ export function App() {
   }, [timer]);
 
   useEffect(() => {
+    countdownRef.current = countdown;
+    saveCountdown(countdown);
+  }, [countdown]);
+
+  useEffect(() => {
     document.body.classList.toggle("timer-running", running);
   }, [running]);
 
   useEffect(() => {
     if (localStorage.getItem(UPDATED_BANNER_FLAG) === "1") {
       localStorage.removeItem(UPDATED_BANNER_FLAG);
-      setBanner({text: "Updated to a new version", className: "downloaded"});
-      setTimeout(() => setBanner(null), 2000);
+      showBanner("Updated to a new version", "downloaded");
     }
 
     registerSW({
@@ -108,7 +120,7 @@ export function App() {
         registration.addEventListener("updatefound", () => {
           const installing = registration.installing;
           if (!installing || !navigator.serviceWorker.controller) return;
-          setBanner({text: "Downloading a new version", className: ""});
+          setBanner({body: "Downloading a new version", className: ""});
           installing.addEventListener("statechange", () => {
             if (installing.state !== "installed") return;
             localStorage.setItem(UPDATED_BANNER_FLAG, "1");
@@ -162,6 +174,17 @@ export function App() {
   function updateSavedTimers(nextSavedTimers) {
     setSavedTimers(nextSavedTimers);
     saveSavedTimers(nextSavedTimers);
+  }
+
+  function updateCountdown(nextCountdown) {
+    if (runningRef.current) return;
+    setCountdown(countdownSec(nextCountdown));
+  }
+
+  function showBanner(body, className = "") {
+    clearTimeout(bannerTimeoutRef.current);
+    setBanner({body, className});
+    bannerTimeoutRef.current = setTimeout(() => setBanner(null), BANNER_MS);
   }
 
   function clearPreStartTimers() {
@@ -238,18 +261,18 @@ export function App() {
     setRunning(true);
     setCount(0);
     clearPreStartTimers();
-    const gap = 0.6;
+    const countdownSeconds = countdownRef.current;
     const short = 0.2;
-    preStartBeepsRef.current.push(Audio.presetBeep(2, short));
-    preStartBeepsRef.current.push(Audio.presetBeep(2, short, gap));
-    preStartBeepsRef.current.push(Audio.presetBeep(2, short, gap * 2));
-    preStartBeepsRef.current.push(Audio.presetBeep(7, 0.7, gap * 3));
+    for (let i = 0; i < countdownSeconds; i++) {
+      preStartBeepsRef.current.push(Audio.presetBeep(2, short, i));
+    }
+    preStartBeepsRef.current.push(Audio.presetBeep(7, 0.7, countdownSeconds));
     preStartTimersRef.current.push(setTimeout(() => {
       if (!runningRef.current) return;
       preStartBeepsRef.current = [];
       clearPreStartTimers();
       startHoldPhase();
-    }, gap * 3 * 1000));
+    }, countdownSeconds * 1000));
   }
 
   function stop() {
@@ -276,23 +299,23 @@ export function App() {
     }
   }
 
-  async function share() {
+  async function copyShareUrl() {
     if (running) return;
     const url = shareUrl(timer);
-    if (navigator.share) {
-      await navigator.share({
-        title: "Phased Timer",
-        url,
-      });
-    } else {
-      await navigator.clipboard.writeText(url);
-    }
+    await navigator.clipboard.writeText(url);
+    showBanner(
+      <>
+        <span>Copied URL to clipboard</span>
+        <span className="copied-url">{url.replace(/^https?:\/\//, "")}</span>
+      </>,
+      "copied",
+    );
   }
 
   return (
     <>
       <div className="background-flash" ref={backgroundFlashRef}></div>
-      {banner && <div className={`update-banner ${banner.className}`.trim()}>{banner.text}</div>}
+      {!settingsOpen && banner && <div className={`update-banner ${banner.className}`.trim()}>{banner.body}</div>}
       <div className="app">
         <h1>Phased Timer</h1>
 
@@ -338,10 +361,18 @@ export function App() {
           onSelectTimer={persistTimer}
           onToggleSavedTimer={toggleSavedTimer}
           onUpdateSavedTimers={updateSavedTimers}
+          onOpenSettings={() => setSettingsOpen(true)}
           setConfirmPanel={setConfirmPanel}
-          share={share}
         />
       </div>
+      <SettingsPanel
+        open={settingsOpen}
+        banner={banner}
+        countdown={countdown}
+        onCountdownChange={updateCountdown}
+        onShare={copyShareUrl}
+        onClose={() => setSettingsOpen(false)}
+      />
       <ConfirmPanel
         confirmPanel={confirmPanel}
         onClose={confirmed => {

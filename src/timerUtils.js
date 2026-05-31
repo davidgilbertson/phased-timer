@@ -1,7 +1,12 @@
 const DEFAULT_TIMER = {hold: 15, rest: 5, reps: 5};
+const DEFAULT_COUNTDOWN = 3;
 
 export function sec(v) {
   return Math.max(1, Math.floor(Number(v) || 1));
+}
+
+export function countdownSec(v) {
+  return Math.max(0, Math.floor(Number(v) || 0));
 }
 
 export function normalizeTimer(timer) {
@@ -24,6 +29,10 @@ export function saveCurrentDurations(timer) {
 
 export function saveSavedTimers(savedTimers) {
   localStorage.setItem("chime_saved_timers", JSON.stringify(savedTimers));
+}
+
+export function saveCountdown(countdown) {
+  localStorage.setItem("chime_countdown", countdown);
 }
 
 export function saveTimerIfMissing(savedTimers, timer) {
@@ -49,12 +58,14 @@ export function loadInitialState() {
   const storedHold = parseInt(localStorage.getItem("chime_hold") ?? localStorage.getItem("chime_on"), 10);
   const storedRest = parseInt(localStorage.getItem("chime_rest") ?? localStorage.getItem("chime_off"), 10);
   const storedReps = parseInt(localStorage.getItem("chime_reps"), 10);
+  const storedCountdown = parseInt(localStorage.getItem("chime_countdown"), 10);
   const hadStoredDuration = !isNaN(storedHold) || !isNaN(storedRest) || !isNaN(storedReps);
   const storedTimer = normalizeTimer({
     hold: isNaN(storedHold) ? DEFAULT_TIMER.hold : storedHold,
     rest: isNaN(storedRest) ? DEFAULT_TIMER.rest : storedRest,
     reps: isNaN(storedReps) ? DEFAULT_TIMER.reps : storedReps,
   });
+  const countdown = isNaN(storedCountdown) ? DEFAULT_COUNTDOWN : countdownSec(storedCountdown);
 
   let timer = storedTimer;
   let savedTimers = JSON.parse(localStorage.getItem("chime_saved_timers") || "[]");
@@ -71,7 +82,7 @@ export function loadInitialState() {
 
   if (hadStoredDuration || timerFromQuery) saveCurrentDurations(timer);
 
-  return {timer, savedTimers};
+  return {timer, savedTimers, countdown};
 }
 
 export function shareUrl(timer) {

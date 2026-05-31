@@ -1,0 +1,50 @@
+.help-page {
+  width: min(100% - 32px, 720px);
+  margin: 0 auto;
+  padding: 28px 0 42px;
+  color: var(--text);
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 34px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 500;
+    line-height: 1.1;
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  p {
+    margin: 0;
+    color: color-mix(in srgb, var(--muted) 86%, var(--text));
+    font-size: 17px;
+    line-height: 1.5;
+  }
+
+  section {
+    margin-top: 28px;
+  }
+
+  a {
+    flex-shrink: 0;
+    min-height: 38px;
+    padding: 9px 12px;
+    border-radius: 6px;
+    color: white;
+    background: var(--dial-hold);
+    font-size: 15px;
+    line-height: 1.25;
+    text-decoration: none;
+  }
+}

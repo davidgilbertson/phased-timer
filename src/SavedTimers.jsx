@@ -1,5 +1,5 @@
 import {useRef} from "react";
-import {ShareIcon} from "./ShareIcon.jsx";
+import {SettingsIcon} from "./SettingsIcon.jsx";
 import {TimerValuesList} from "./TimerValuesList.jsx";
 import {timerKey} from "./timerUtils.js";
 
@@ -13,8 +13,8 @@ export function SavedTimers({
   onSelectTimer,
   onToggleSavedTimer,
   onUpdateSavedTimers,
+  onOpenSettings,
   setConfirmPanel,
-  share,
 }) {
   const longPressTimeoutRef = useRef(null);
   const longPressHandledRef = useRef(false);
@@ -65,8 +65,8 @@ export function SavedTimers({
       <button className="save-button" type="button" onClick={onToggleSavedTimer}>
         {selectedSavedTimerIndex === -1 ? "Save" : "Unsave"}
       </button>
-      <button className="share-button" type="button" aria-label="Share timer" title="Share" onClick={share}>
-        <ShareIcon/>
+      <button className="settings-button" type="button" aria-label="Open settings" title="Settings" onClick={onOpenSettings}>
+        <SettingsIcon/>
       </button>
     </div>
   );
